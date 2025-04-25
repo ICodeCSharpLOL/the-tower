@@ -20,11 +20,28 @@ canvas.addEventListener('mouseup',   () => Mouse.clicked = false);
 
 // ——— PATH DEFINITION ———
 const path = [
-  { x: 100, y: 100, color:'green' }, { x: 300, y: 100, color:'green' },
-  { x: 300, y: 300, color:'green' }, { x: 600, y: 300, color:'red' },
-  { x: 600, y: 500, color:'red'  }, { x: 900, y: 500, color:'red'  }
+  { x: 100, y: 100, color:'blue' }, { x: 300, y: 100, color:'blue' }, 
+  { x: 300, y: 300, color:'blue' }, { x: 100, y: 300, color:'blue' }, 
+  { x: 100, y: 200, color:'blue' }, { x: 500, y: 200, color:'blue' },
+ 
+  { x: 500, y: 300, color:'yellow' }, { x: 500, y: 500, color:'yellow'  },
+  { x: 650, y: 500, color:'yellow'  },  { x: 650, y: 300, color:'yellow'}, 
+  { x: 750, y: 300, color:'yellow'}, { x: 750, y: 500, color:'yellow'  },
+ 
+  { x: 900, y: 500, color:'purple'  }, { x: 900, y: 300, color:'white' },{ x: 900, y: 100, color:'purple' }, 
+  { x: 1000, y: 100, color:'purple' }, { x: 1000, y: 300, color:'white' },{ x: 1000, y: 500, color:'purple'  },
+  { x: 1100, y: 500, color:'purple'  }, { x: 1100, y: 300, color:'white' },{ x: 1100, y: 100, color:'purple' }, 
+  { x: 1200, y: 100, color:'purple' }, { x: 1200, y: 300, color:'white' },{ x: 1200, y: 500, color:'purple'  },
+
+  { x: 900+400, y: 500, color:'purple'  },{ x: 1300, y: 300, color:'white' }, { x: 900+400, y: 100, color:'purple' }, 
+  { x: 1000+400, y: 100, color:'purple' },{ x: 1400, y: 300, color:'white' }, { x: 1000+400, y: 500, color:'purple'  },
+  { x: 1100+400, y: 500, color:'purple'  },{ x: 1500, y: 300, color:'white' }, { x: 1100+400, y: 100, color:'purple' }, 
+  { x: 1200+400, y: 100, color:'purple' },{ x: 1600, y: 300, color:'white' }, { x: 1200+400, y: 500, color:'purple'  },
+
+  { x: 1600, y: 800, color:'red' },{ x: 1000, y: 800, color:'red' }, 
+  { x: 300, y: 800, color:'red' }, { x: 300, y: 600, color:'red' }
 ];
-const TILE_SIZE = 20;
+const TILE_SIZE = 50;
 
 // ——— BUTTON SYSTEM ———
 const ui = document.getElementById('ui');
@@ -103,17 +120,36 @@ class FastEnemy extends Enemy {
     this.health = this.maxHealth;
   }
 }
+class SlowEnemy extends Enemy {
+  constructor(path) {
+    super(path);
+    this.speed  = .5;
+    this.radius = 11;
+    this.maxHealth = 20;
+    this.health = this.maxHealth;
+  }
+}
+class BOSSEnemy extends Enemy {
+  constructor(path) {
+    super(path);
+    this.speed  = .5;
+    this.radius = 50;
+    this.maxHealth = 2100;
+    this.health = this.maxHealth;
+  }
+}
 
 // ——— PARTICLES FOR DAMAGE ANIMATION ———
 class Particle {
   constructor(x, y) {
     this.x = x; this.y = y;
+    this.lineWidth = Math.random()*1.5;
     const angle = Math.random() * Math.PI * 2;
     const speed = 1 + Math.random() * 2;
     this.vx = Math.cos(angle) * speed;
     this.vy = Math.sin(angle) * speed;
     this.life = 30 + Math.random() * 20;
-    this.radius = 2 + Math.random() * 2;
+    this.radius = (Math.random()*3.6) + Math.random() * 2;
   }
   update() {
     this.x += this.vx;
@@ -126,6 +162,12 @@ class Particle {
     ctx.fillStyle = 'white';
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
     ctx.fill();
+
+    // Set the stroke style and line width
+ctx.strokeStyle = 'red';
+ctx.lineWidth = this.lineWidth;
+// Draw the outline of the circle
+ctx.stroke();
   }
 }
 
@@ -137,6 +179,8 @@ function spawnEnemy(EnemyClass) {
 }
 registerButton('Spawn Basic', () => spawnEnemy(Enemy));
 registerButton('Spawn Fast',  () => spawnEnemy(FastEnemy));
+registerButton('Spawn Slow',  () => spawnEnemy(SlowEnemy));
+registerButton('Spawn BOSS',  () => spawnEnemy(BOSSEnemy));
 
 // ——— HELPERS ———
 // is (x,y) inside any path tile
@@ -158,7 +202,7 @@ function handleClick() {
     if (Math.hypot(dx, dy) <= e.radius && isOnPath(e.x, e.y)) {
       e.takeDamage(dmg);
       // spawn ~6 particles
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 10; i++) {
         particles.push(new Particle(e.x, e.y));
       }
     }
@@ -167,19 +211,32 @@ function handleClick() {
 
 // ——— DRAW PATH ———
 function drawPath(ctx) {
+  //pathway
+  ctx.beginPath();
+  ctx.moveTo(path[0].x, path[0].y);
+  for (let p of path.slice(1)) ctx.lineTo(p.x, p.y);
+  ctx.strokeStyle = 'rgba(77, 55, 31,1)';
+  ctx.lineWidth = 10;
+  ctx.stroke();
+
+  //squares
   for (let p of path) {
+    let thickness = 3;
+     ctx.fillStyle = 'black';
+    //fill bigger square that becomes border
+    ctx.fillRect(
+      (p.x - TILE_SIZE/2) - thickness,
+      (p.y - TILE_SIZE/2) - thickness,
+      TILE_SIZE + (thickness*2), TILE_SIZE+ (thickness*2)
+    );
     ctx.fillStyle = p.color;
+    ctx.globalAlpha = 0.8;
     ctx.fillRect(
       p.x - TILE_SIZE/2,
       p.y - TILE_SIZE/2,
       TILE_SIZE, TILE_SIZE
     );
   }
-  ctx.beginPath();
-  ctx.moveTo(path[0].x, path[0].y);
-  for (let p of path.slice(1)) ctx.lineTo(p.x, p.y);
-  ctx.strokeStyle = 'rgba(255,0,0,0.5)';
-  ctx.stroke();
 }
 
 // ——— GAME LOOP ———
