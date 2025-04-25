@@ -20,9 +20,9 @@ canvas.addEventListener('mouseup',   () => Mouse.clicked = false);
 
 // ——— PATH DEFINITION ———
 const path = [
-  { x: 100, y: 100, color: }, { x: 300, y: 100 },
-  { x: 300, y: 300 }, { x: 600, y: 300 },
-  { x: 600, y: 500 }, { x: 900, y: 500 }
+  { x: 100, y: 100, color:'green' }, { x: 300, y: 100, color:'green' },
+  { x: 300, y: 300, color:'green' }, { x: 600, y: 300, color:'red' },
+  { x: 600, y: 500, color:'red'  }, { x: 900, y: 500, color:'red'  }
 ];
 const TILE_SIZE = 20;
 
@@ -168,7 +168,7 @@ function handleClick() {
 // ——— DRAW PATH ———
 function drawPath(ctx) {
   for (let p of path) {
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = p.color;
     ctx.fillRect(
       p.x - TILE_SIZE/2,
       p.y - TILE_SIZE/2,
